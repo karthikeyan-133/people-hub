@@ -10,6 +10,15 @@ import {
   Building2,
   Settings,
   LogOut,
+  FileCheck,
+  Car,
+  Truck,
+  Gift,
+  Banknote,
+  AlertOctagon,
+  Heart,
+  ClipboardCheck,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +29,15 @@ const navigation = [
   { name: "Leave Management", href: "/leave", icon: CalendarDays },
   { name: "Attendance", href: "/attendance", icon: Clock },
   { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Payroll", href: "/payroll", icon: DollarSign },
+  { name: "Visa & Documents", href: "/visa-documents", icon: FileCheck },
+  { name: "Driving Licence", href: "/driving-licence", icon: Car },
+  { name: "Vehicles", href: "/vehicles", icon: Truck },
+  { name: "Benefits & Gratuity", href: "/benefits", icon: Gift },
+  { name: "Payroll & WPS", href: "/payroll-wps", icon: Banknote },
+  { name: "Disciplinary", href: "/disciplinary", icon: AlertOctagon },
+  { name: "Health Insurance", href: "/health-insurance", icon: Heart },
+  { name: "Compliance & Audit", href: "/compliance", icon: ClipboardCheck },
+  { name: "Performance", href: "/performance", icon: TrendingUp },
   { name: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
