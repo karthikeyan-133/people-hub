@@ -1,12 +1,48 @@
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { Calendar, Check, X, Clock, Plus } from "lucide-react";
 
-const leaveRequests = [
+interface LeaveRequest {
+  id: number;
+  employee: {
+    name: string;
+    avatar: string;
+    initials: string;
+    department: string;
+  };
+  type: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  status: "pending" | "approved" | "rejected";
+  reason: string;
+}
+
+const initialLeaveRequests: LeaveRequest[] = [
   {
     id: 1,
     employee: {
@@ -105,6 +141,72 @@ const statusBadge = (status: string) => {
 };
 
 const LeaveManagement = () => {
+  const { toast } = useToast();
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(initialLeaveRequests);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [newRequest, setNewRequest] = useState({
+    type: "",
+    startDate: "",
+    endDate: "",
+    reason: "",
+  });
+
+  const handleApprove = (request: LeaveRequest) => {
+    setLeaveRequests(leaveRequests.map((r) =>
+      r.id === request.id ? { ...r, status: "approved" } : r
+    ));
+    toast({
+      title: "Leave Approved",
+      description: `${request.employee.name}'s ${request.type} request has been approved.`,
+    });
+  };
+
+  const handleReject = (request: LeaveRequest) => {
+    setLeaveRequests(leaveRequests.map((r) =>
+      r.id === request.id ? { ...r, status: "rejected" } : r
+    ));
+    toast({
+      title: "Leave Rejected",
+      description: `${request.employee.name}'s ${request.type} request has been rejected.`,
+      variant: "destructive",
+    });
+  };
+
+  const handleSubmitRequest = () => {
+    if (!newRequest.type || !newRequest.startDate || !newRequest.endDate) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const request: LeaveRequest = {
+      id: leaveRequests.length + 1,
+      employee: {
+        name: "Current User",
+        avatar: "",
+        initials: "CU",
+        department: "Your Department",
+      },
+      type: newRequest.type,
+      startDate: new Date(newRequest.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      endDate: new Date(newRequest.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      days: Math.ceil((new Date(newRequest.endDate).getTime() - new Date(newRequest.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1,
+      status: "pending",
+      reason: newRequest.reason,
+    };
+
+    setLeaveRequests([request, ...leaveRequests]);
+    setNewRequest({ type: "", startDate: "", endDate: "", reason: "" });
+    setIsRequestDialogOpen(false);
+    toast({
+      title: "Leave Request Submitted",
+      description: `Your ${request.type} request for ${request.days} day(s) has been submitted.`,
+    });
+  };
+
   return (
     <MainLayout title="Leave Management" subtitle="Manage time off requests">
       {/* Quick Stats */}
@@ -138,7 +240,7 @@ const LeaveManagement = () => {
       </div>
 
       <div className="flex justify-end mb-6">
-        <Button>
+        <Button onClick={() => setIsRequestDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Request Leave
         </Button>
@@ -175,11 +277,21 @@ const LeaveManagement = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Button size="sm" variant="ghost" className="text-primary hover:bg-primary/10">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-primary hover:bg-primary/10"
+                        onClick={() => handleApprove(request)}
+                      >
                         <Check className="mr-1 h-4 w-4" />
                         Approve
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => handleReject(request)}
+                      >
                         <X className="mr-1 h-4 w-4" />
                         Reject
                       </Button>
@@ -280,6 +392,72 @@ const LeaveManagement = () => {
           ))}
         </TabsContent>
       </Tabs>
+
+      {/* Request Leave Dialog */}
+      <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request Leave</DialogTitle>
+            <DialogDescription>
+              Submit a new leave request.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="type">Leave Type</Label>
+              <Select
+                value={newRequest.type}
+                onValueChange={(value) => setNewRequest({ ...newRequest, type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select leave type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Annual Leave">Annual Leave</SelectItem>
+                  <SelectItem value="Sick Leave">Sick Leave</SelectItem>
+                  <SelectItem value="Personal Leave">Personal Leave</SelectItem>
+                  <SelectItem value="Unpaid Leave">Unpaid Leave</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={newRequest.startDate}
+                  onChange={(e) => setNewRequest({ ...newRequest, startDate: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={newRequest.endDate}
+                  onChange={(e) => setNewRequest({ ...newRequest, endDate: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason</Label>
+              <Textarea
+                id="reason"
+                value={newRequest.reason}
+                onChange={(e) => setNewRequest({ ...newRequest, reason: e.target.value })}
+                placeholder="Briefly describe the reason for leave"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitRequest}>Submit Request</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,16 +13,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
 import { Search, Download, Clock, UserCheck, UserX, AlertTriangle } from "lucide-react";
 
-const attendanceStats = [
-  { label: "Present", value: 142, icon: UserCheck, color: "text-primary" },
-  { label: "Absent", value: 6, icon: UserX, color: "text-destructive" },
-  { label: "Late", value: 8, icon: AlertTriangle, color: "text-chart-4" },
-  { label: "On Leave", value: 8, icon: Clock, color: "text-muted-foreground" },
-];
+interface AttendanceRecord {
+  id: number;
+  employee: {
+    name: string;
+    avatar: string;
+    initials: string;
+    department: string;
+  };
+  checkIn: string;
+  checkOut: string;
+  status: "present" | "late" | "absent" | "on-leave";
+  workHours: string;
+}
 
-const attendanceRecords = [
+const initialAttendanceRecords: AttendanceRecord[] = [
   {
     id: 1,
     employee: {
@@ -118,6 +127,29 @@ const statusBadge = (status: string) => {
 };
 
 const Attendance = () => {
+  const { toast } = useToast();
+  const [attendanceRecords] = useState<AttendanceRecord[]>(initialAttendanceRecords);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredRecords = attendanceRecords.filter((record) =>
+    record.employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    record.employee.department.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const attendanceStats = [
+    { label: "Present", value: filteredRecords.filter(r => r.status === "present").length, icon: UserCheck, color: "text-primary" },
+    { label: "Absent", value: filteredRecords.filter(r => r.status === "absent").length, icon: UserX, color: "text-destructive" },
+    { label: "Late", value: filteredRecords.filter(r => r.status === "late").length, icon: AlertTriangle, color: "text-chart-4" },
+    { label: "On Leave", value: filteredRecords.filter(r => r.status === "on-leave").length, icon: Clock, color: "text-muted-foreground" },
+  ];
+
+  const handleExport = () => {
+    toast({
+      title: "Export Started",
+      description: "Attendance report is being generated and will download shortly.",
+    });
+  };
+
   return (
     <MainLayout title="Attendance" subtitle="Track employee attendance">
       {/* Stats */}
@@ -144,9 +176,14 @@ const Attendance = () => {
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search..." className="w-64 pl-9" />
+              <Input
+                placeholder="Search..."
+                className="w-64 pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
@@ -165,7 +202,7 @@ const Attendance = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {attendanceRecords.map((record) => (
+              {filteredRecords.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
