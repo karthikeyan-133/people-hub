@@ -19,6 +19,8 @@ import {
   Heart,
   ClipboardCheck,
   TrendingUp,
+  Receipt,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +34,8 @@ const navigation = [
   { name: "Visa & Documents", href: "/visa-documents", icon: FileCheck },
   { name: "Driving Licence", href: "/driving-licence", icon: Car },
   { name: "Vehicles", href: "/vehicles", icon: Truck },
+  { name: "Company Expenses", href: "/expenses", icon: Receipt },
+  { name: "Company Assets", href: "/assets", icon: Package },
   { name: "Benefits & Gratuity", href: "/benefits", icon: Gift },
   { name: "Payroll & WPS", href: "/payroll-wps", icon: Banknote },
   { name: "Disciplinary", href: "/disciplinary", icon: AlertOctagon },

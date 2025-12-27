@@ -21,6 +21,8 @@ import Disciplinary from "./pages/Disciplinary";
 import HealthInsurance from "./pages/HealthInsurance";
 import ComplianceAudit from "./pages/ComplianceAudit";
 import Performance from "./pages/Performance";
+import CompanyExpenses from "./pages/CompanyExpenses";
+import CompanyAssets from "./pages/CompanyAssets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +46,8 @@ const App = () => (
           <Route path="/visa-documents" element={<VisaDocuments />} />
           <Route path="/driving-licence" element={<DrivingLicence />} />
           <Route path="/vehicles" element={<VehicleManagement />} />
+          <Route path="/expenses" element={<CompanyExpenses />} />
+          <Route path="/assets" element={<CompanyAssets />} />
           <Route path="/benefits" element={<BenefitsGratuity />} />
           <Route path="/payroll-wps" element={<PayrollWPS />} />
           <Route path="/disciplinary" element={<Disciplinary />} />

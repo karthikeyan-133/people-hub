@@ -1,19 +1,12 @@
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line,
 } from "recharts";
 import { Download, FileText, Users, TrendingUp, Calendar } from "lucide-react";
 
@@ -27,12 +20,8 @@ const departmentData = [
 ];
 
 const attendanceTrend = [
-  { month: "Jul", rate: 94 },
-  { month: "Aug", rate: 92 },
-  { month: "Sep", rate: 95 },
-  { month: "Oct", rate: 93 },
-  { month: "Nov", rate: 91 },
-  { month: "Dec", rate: 94 },
+  { month: "Jul", rate: 94 }, { month: "Aug", rate: 92 }, { month: "Sep", rate: 95 },
+  { month: "Oct", rate: 93 }, { month: "Nov", rate: 91 }, { month: "Dec", rate: 94 },
 ];
 
 const leaveDistribution = [
@@ -50,18 +39,21 @@ const reportCards = [
 ];
 
 const Reports = () => {
+  const { toast } = useToast();
+
+  const handleDownload = (reportName: string) => {
+    toast({ title: "Download Started", description: `${reportName} is being generated and will download shortly.` });
+  };
+
   return (
     <MainLayout title="Reports" subtitle="Analytics and insights">
-      {/* Quick Reports */}
       <div className="mb-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {reportCards.map((report) => (
           <Card key={report.title} className="cursor-pointer transition-shadow hover:shadow-md">
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
-                <div className="rounded-lg bg-accent p-3">
-                  <report.icon className="h-6 w-6 text-accent-foreground" />
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <div className="rounded-lg bg-accent p-3"><report.icon className="h-6 w-6 text-accent-foreground" /></div>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownload(report.title)}>
                   <Download className="h-4 w-4" />
                 </Button>
               </div>
@@ -71,59 +63,30 @@ const Reports = () => {
           </Card>
         ))}
       </div>
-
-      {/* Charts Row 1 */}
       <div className="mb-6 grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Employees by Department</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Employees by Department</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={departmentData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis dataKey="name" type="category" width={100} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: 'var(--radius)',
-                  }}
-                />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)' }} />
                 <Bar dataKey="employees" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader>
-            <CardTitle>Leave Distribution</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Leave Distribution</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie
-                  data={leaveDistribution}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {leaveDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+                <Pie data={leaveDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                  {leaveDistribution.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: 'var(--radius)',
-                  }}
-                />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)' }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="mt-4 flex flex-wrap justify-center gap-4">
@@ -137,32 +100,16 @@ const Reports = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Charts Row 2 */}
       <Card>
-        <CardHeader>
-          <CardTitle>Attendance Rate Trend</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>Attendance Rate Trend</CardTitle></CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={attendanceTrend}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis dataKey="month" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
               <YAxis domain={[85, 100]} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 'var(--radius)',
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="rate"
-                stroke="hsl(var(--primary))"
-                strokeWidth={3}
-                dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }}
-              />
+              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)' }} />
+              <Line type="monotone" dataKey="rate" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
