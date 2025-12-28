@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -13,8 +14,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Download, Clock, UserCheck, UserX, AlertTriangle } from "lucide-react";
+import { Search, Download, Clock, UserCheck, UserX, AlertTriangle, Plus, Edit, Trash2, Eye } from "lucide-react";
 
 interface AttendanceRecord {
   id: number;
@@ -128,8 +144,19 @@ const statusBadge = (status: string) => {
 
 const Attendance = () => {
   const { toast } = useToast();
-  const [attendanceRecords] = useState<AttendanceRecord[]>(initialAttendanceRecords);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendanceRecords);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
+  const [formData, setFormData] = useState({
+    employeeName: "",
+    department: "",
+    checkIn: "",
+    checkOut: "",
+    status: "present" as "present" | "late" | "absent" | "on-leave",
+  });
 
   const filteredRecords = attendanceRecords.filter((record) =>
     record.employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,6 +175,82 @@ const Attendance = () => {
       title: "Export Started",
       description: "Attendance report is being generated and will download shortly.",
     });
+  };
+
+  const handleAddAttendance = () => {
+    const initials = formData.employeeName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+
+    const newRecord: AttendanceRecord = {
+      id: attendanceRecords.length + 1,
+      employee: {
+        name: formData.employeeName,
+        avatar: "",
+        initials,
+        department: formData.department,
+      },
+      checkIn: formData.checkIn || "-",
+      checkOut: formData.checkOut || "-",
+      status: formData.status,
+      workHours: formData.checkIn && formData.checkOut ? "8h 0m" : "-",
+    };
+
+    setAttendanceRecords([...attendanceRecords, newRecord]);
+    setIsAddDialogOpen(false);
+    setFormData({ employeeName: "", department: "", checkIn: "", checkOut: "", status: "present" });
+    toast({
+      title: "Attendance Added",
+      description: `Attendance record for ${formData.employeeName} has been added.`,
+    });
+  };
+
+  const handleEditAttendance = () => {
+    if (!selectedRecord) return;
+
+    setAttendanceRecords(attendanceRecords.map((record) =>
+      record.id === selectedRecord.id
+        ? {
+            ...record,
+            checkIn: formData.checkIn || record.checkIn,
+            checkOut: formData.checkOut || record.checkOut,
+            status: formData.status,
+          }
+        : record
+    ));
+    setIsEditDialogOpen(false);
+    setSelectedRecord(null);
+    toast({
+      title: "Attendance Updated",
+      description: "Attendance record has been updated successfully.",
+    });
+  };
+
+  const handleDeleteAttendance = (id: number) => {
+    setAttendanceRecords(attendanceRecords.filter((record) => record.id !== id));
+    toast({
+      title: "Attendance Deleted",
+      description: "Attendance record has been deleted.",
+    });
+  };
+
+  const openEditDialog = (record: AttendanceRecord) => {
+    setSelectedRecord(record);
+    setFormData({
+      employeeName: record.employee.name,
+      department: record.employee.department,
+      checkIn: record.checkIn,
+      checkOut: record.checkOut,
+      status: record.status,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const openViewDialog = (record: AttendanceRecord) => {
+    setSelectedRecord(record);
+    setIsViewDialogOpen(true);
   };
 
   return (
@@ -187,6 +290,10 @@ const Attendance = () => {
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Attendance
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -199,6 +306,7 @@ const Attendance = () => {
                 <TableHead>Check Out</TableHead>
                 <TableHead>Work Hours</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -218,12 +326,185 @@ const Attendance = () => {
                   <TableCell className="text-muted-foreground">{record.checkOut}</TableCell>
                   <TableCell className="text-muted-foreground">{record.workHours}</TableCell>
                   <TableCell>{statusBadge(record.status)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => openViewDialog(record)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(record)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteAttendance(record.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Add Attendance Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Attendance Record</DialogTitle>
+            <DialogDescription>Add a new attendance record for an employee.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="employeeName">Employee Name</Label>
+              <Input
+                id="employeeName"
+                value={formData.employeeName}
+                onChange={(e) => setFormData({ ...formData, employeeName: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="department">Department</Label>
+              <Input
+                id="department"
+                value={formData.department}
+                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="checkIn">Check In</Label>
+                <Input
+                  id="checkIn"
+                  type="time"
+                  value={formData.checkIn}
+                  onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="checkOut">Check Out</Label>
+                <Input
+                  id="checkOut"
+                  type="time"
+                  value={formData.checkOut}
+                  onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(value: "present" | "late" | "absent" | "on-leave") => setFormData({ ...formData, status: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="present">Present</SelectItem>
+                  <SelectItem value="late">Late</SelectItem>
+                  <SelectItem value="absent">Absent</SelectItem>
+                  <SelectItem value="on-leave">On Leave</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddAttendance}>Add Record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Attendance Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Attendance Record</DialogTitle>
+            <DialogDescription>Update the attendance record.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="editCheckIn">Check In</Label>
+                <Input
+                  id="editCheckIn"
+                  type="time"
+                  value={formData.checkIn}
+                  onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editCheckOut">Check Out</Label>
+                <Input
+                  id="editCheckOut"
+                  type="time"
+                  value={formData.checkOut}
+                  onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editStatus">Status</Label>
+              <Select value={formData.status} onValueChange={(value: "present" | "late" | "absent" | "on-leave") => setFormData({ ...formData, status: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="present">Present</SelectItem>
+                  <SelectItem value="late">Late</SelectItem>
+                  <SelectItem value="absent">Absent</SelectItem>
+                  <SelectItem value="on-leave">On Leave</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleEditAttendance}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Attendance Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Attendance Details</DialogTitle>
+          </DialogHeader>
+          {selectedRecord && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={selectedRecord.employee.avatar} />
+                  <AvatarFallback className="text-lg">{selectedRecord.employee.initials}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="text-lg font-semibold">{selectedRecord.employee.name}</h3>
+                  <p className="text-muted-foreground">{selectedRecord.employee.department}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Check In</Label>
+                  <p className="font-medium">{selectedRecord.checkIn}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Check Out</Label>
+                  <p className="font-medium">{selectedRecord.checkOut}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Work Hours</Label>
+                  <p className="font-medium">{selectedRecord.workHours}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Status</Label>
+                  <div className="mt-1">{statusBadge(selectedRecord.status)}</div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };
