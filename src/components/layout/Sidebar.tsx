@@ -49,61 +49,84 @@ const bottomNavigation = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  sidebarOpen?: boolean;
+  setSidebarOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export function Sidebar({ sidebarOpen = true, setSidebarOpen }: SidebarProps = {}) {
   const location = useLocation();
 
   return (
-    <aside className="flex h-screen w-64 flex-col bg-card border-r border-border">
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-border px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-          <Users className="h-5 w-5 text-primary-foreground" />
+    <>
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          onClick={() => setSidebarOpen && setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:flex lg:flex-col h-screen flex flex-col`}>
+        {/* Logo */}
+        <div className="flex h-16 items-center gap-3 border-b border-border px-6 flex-shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+            <Users className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="font-semibold text-foreground">People Hub</h1>
+            <p className="text-xs text-muted-foreground">HR Management</p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-semibold text-foreground">HR Portal</h1>
-          <p className="text-xs text-muted-foreground">Management System</p>
-        </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navigation.map((item) => {
-          const isActive = location.pathname === item.href;
-          return (
+        {/* Navigation Container with Scroll */}
+        <div className="flex-1 overflow-hidden">
+          <nav className="h-full overflow-y-auto px-3 py-4 space-y-1">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                  onClick={() => window.innerWidth < 1024 && setSidebarOpen && setSidebarOpen(false)}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Bottom Navigation */}
+        <div className="border-t border-border px-3 py-4 flex-shrink-0">
+          {bottomNavigation.map((item) => (
             <Link
               key={item.name}
               to={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              onClick={() => window.innerWidth < 1024 && setSidebarOpen && setSidebarOpen(false)}
             >
               <item.icon className="h-5 w-5" />
               {item.name}
             </Link>
-          );
-        })}
-      </nav>
-
-      {/* Bottom Navigation */}
-      <div className="border-t border-border px-3 py-4">
-        {bottomNavigation.map((item) => (
-          <Link
-            key={item.name}
-            to={item.href}
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <item.icon className="h-5 w-5" />
-            {item.name}
-          </Link>
-        ))}
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
-          <LogOut className="h-5 w-5" />
-          Logout
-        </button>
-      </div>
-    </aside>
+          ))}
+          <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+            <LogOut className="h-5 w-5" />
+            Logout
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
