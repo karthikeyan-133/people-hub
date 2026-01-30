@@ -23,6 +23,7 @@ import ComplianceAudit from "./pages/ComplianceAudit";
 import Performance from "./pages/Performance";
 import CompanyExpenses from "./pages/CompanyExpenses";
 import CompanyAssets from "./pages/CompanyAssets";
+import Timesheet from "./pages/Timesheet";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/health-insurance" element={<HealthInsurance />} />
           <Route path="/compliance" element={<ComplianceAudit />} />
           <Route path="/performance" element={<Performance />} />
+          <Route path="/timesheet" element={<Timesheet />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
