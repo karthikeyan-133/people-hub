@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Receipt,
   Package,
+  Timer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,7 @@ const navigation = [
   { name: "Health Insurance", href: "/health-insurance", icon: Heart },
   { name: "Compliance & Audit", href: "/compliance", icon: ClipboardCheck },
   { name: "Performance", href: "/performance", icon: TrendingUp },
+  { name: "Timesheet", href: "/timesheet", icon: Timer },
   { name: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
